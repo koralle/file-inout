@@ -1,0 +1,73 @@
+name: CI
+on: push
+
+jobs:
+  build_cache:
+    runs-on: ubuntu-20.04
+
+    env:
+      RUSTC_FORCE_INCREMENTAL: 1
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/cache_cargo
+
+      - name: build
+        run: cargo build
+        working-directory: .
+
+  fmt:
+    runs-on: ubuntu-20.04
+
+    needs: build_cache
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: rustup component add rustfmt
+
+      - uses: ./.github/actions/cache_cargo
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+        working-directory: .
+
+
+  clippy:
+    runs-on: ubuntu-20.04
+
+    env:
+      RUSTC_FORCE_INCREMENTAL: 1
+
+    needs: build_cache
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: rustup component add clippy
+
+      - uses: ./.github/actions/cache_cargo
+
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: .
+
+
+  test:
+    runs-on: ubuntu-20.04
+    
+    env:
+      RUSTC_FORCE_INCREMENTAL: 1
+
+    needs: build_cache
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/cache_cargo
+
+      - name: unittest
+        run: cargo test
+        working-directory: .
+
